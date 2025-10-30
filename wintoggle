@@ -9,7 +9,7 @@ display_logo() {
     ${NC}"
 }
 
-VERSION="0.1.1"
+VERSION="0.1.2"
 
 cmd=""
 window_name=""
@@ -125,13 +125,6 @@ run_hook() {
 # Improved focus function with better X11 handling
 focus_window() {
     local wid="$1"
-
-    # Verify window still exists before operating on it
-    if ! xdotool search --sync --all --pid "$(xprop -id "$wid" _NET_WM_PID 2>/dev/null | cut -d' ' -f3 2>/dev/null)" >/dev/null 2>&1; then
-        echo "Warning: Window $wid no longer exists"
-        return 1
-    fi
-
     eval $(xdotool getmouselocation --shell)
     xdotool windowmove "$wid" "$X" "$Y"
     xdotool windowactivate --sync "$wid"
@@ -162,8 +155,8 @@ if [[ -z "$window_id" ]]; then
     echo "Starting new process: $cmd"
     run_hook "$on_activate"
 
-    # Use setsid to prevent X11 issues with child processes
-    setsid bash -c "$cmd" >/dev/null 2>&1 &
+    nohup setsid bash -c "$cmd" </dev/null >/dev/null 2>&1 &
+    disown
 
     # Wait for window to appear with shorter timeout for responsiveness
     if wait_for_window "$window_name" 10; then
