@@ -171,19 +171,31 @@ echo "Window Process Name: $window_name"
 echo "Window ID: $window_id"
 
 state=""
-if state="$(xprop -id "$window_id" _NET_WM_STATE 2>/dev/null)"; then
-    echo "Window State: $state"
-    if [[ ${state,,} == *"_net_wm_state_hidden"* ]]; then
-        echo "Window Action: Activate"
-        focus_window "$window_id"
-        run_hook "$on_activate"
-    else
-        echo "Window Action: Hide"
-        # Use xdotool for minimize (wmctrl doesn't have a minimize option)
-        xdotool windowminimize --sync "$window_id" 2>/dev/null
-        run_hook "$on_minimize"
-    fi
-else
+if ! state="$(xprop -id "$window_id" _NET_WM_STATE 2>/dev/null)"; then
     echo "❌ Could not get window state for ID: $window_id"
     exit 1
+fi
+
+focused_window=0
+if ! focused_window="$(xdotool getactivewindow 2>/dev/null)"; then
+    echo "❌ Could not get currently active window ID"
+    exit 1
+fi
+
+if [[ $focused_window -eq $window_id ]]; then
+    has_focus=true
+else
+    has_focus=false
+fi
+
+echo "Window State: $state"
+if [[ ${state,,} == *"_net_wm_state_hidden"* ]] || ! $has_focus; then
+    echo "Window Action: Activate"
+    focus_window "$window_id"
+    run_hook "$on_activate"
+else
+    echo "Window Action: Hide"
+    # Use xdotool for minimize (wmctrl doesn't have a minimize option)
+    xdotool windowminimize --sync "$window_id" 2>/dev/null
+    run_hook "$on_minimize"
 fi
