@@ -15,6 +15,7 @@ cmd=""
 window_name=""
 on_activate=""
 on_minimize=""
+center_at_cursor=false
 display_help() {
     echo "Toggle a window in or out of the current active monitor."
     echo
@@ -25,6 +26,7 @@ display_help() {
     echo "    -a, --on-activate                Run this command on activate of window."
     echo "    -m, --on-minimize                Run this command on minimize of window."
     echo "    -c, --cmd                        The command to execute that opens new window when its not running if different from window process name."
+    echo "    --center-at-cursor               Displays the window centered on the cursor"
     echo "    -v, --version                    Display version information."
     echo "    -h, --help                       Display command help."
 }
@@ -51,6 +53,10 @@ while [ $# -gt 0 ]; do
         ;;
     --name | -n)
         window_name="$(echo $2 | xargs)"
+        shift
+        ;;
+    --center-at-cursor)
+        center_at_cursor=true
         shift
         ;;
     --version | -v)
@@ -127,6 +133,12 @@ focus_window() {
     local wid="$1"
     eval $(xdotool getmouselocation --shell)
 
+    if $center_at_cursor; then
+        eval $(xdotool getwindowgeometry --shell --prefix WINDOW_ $wid)
+        X=$(( $X - $WINDOW_WIDTH / 2 ))
+        Y=$(( $Y - $WINDOW_HEIGHT / 2 ))
+    fi
+    
     if [[ $(xdotool get_num_desktops 2>/dev/null) -gt 1 ]]; then
         active_desktop=$(xdotool get_desktop 2>/dev/null)
         xdotool set_desktop_for_window $wid $active_desktop
@@ -177,19 +189,31 @@ echo "Window Process Name: $window_name"
 echo "Window ID: $window_id"
 
 state=""
-if state="$(xprop -id "$window_id" _NET_WM_STATE 2>/dev/null)"; then
-    echo "Window State: $state"
-    if [[ ${state,,} == *"_net_wm_state_hidden"* ]]; then
-        echo "Window Action: Activate"
-        focus_window "$window_id"
-        run_hook "$on_activate"
-    else
-        echo "Window Action: Hide"
-        # Use xdotool for minimize (wmctrl doesn't have a minimize option)
-        xdotool windowminimize --sync "$window_id" 2>/dev/null
-        run_hook "$on_minimize"
-    fi
-else
+if ! state="$(xprop -id "$window_id" _NET_WM_STATE 2>/dev/null)"; then
     echo "❌ Could not get window state for ID: $window_id"
     exit 1
+fi
+
+focused_window=0
+if ! focused_window="$(xdotool getactivewindow 2>/dev/null)"; then
+    echo "❌ Could not get currently active window ID"
+    exit 1
+fi
+
+if [[ $focused_window -eq $window_id ]]; then
+    has_focus=true
+else
+    has_focus=false
+fi
+
+echo "Window State: $state"
+if [[ ${state,,} == *"_net_wm_state_hidden"* ]] || ! $has_focus; then
+    echo "Window Action: Activate"
+    focus_window "$window_id"
+    run_hook "$on_activate"
+else
+    echo "Window Action: Hide"
+    # Use xdotool for minimize (wmctrl doesn't have a minimize option)
+    xdotool windowminimize --sync "$window_id" 2>/dev/null
+    run_hook "$on_minimize"
 fi
