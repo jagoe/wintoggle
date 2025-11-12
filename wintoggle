@@ -57,7 +57,6 @@ while [ $# -gt 0 ]; do
         ;;
     --center-at-cursor)
         center_at_cursor=true
-        shift
         ;;
     --version | -v)
         echo "v$VERSION"
