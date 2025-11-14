@@ -137,6 +137,11 @@ focus_window() {
         X=$(( $X - $WINDOW_WIDTH / 2 ))
         Y=$(( $Y - $WINDOW_HEIGHT / 2 ))
     fi
+    
+    if [[ $(xdotool get_num_desktops 2>/dev/null) -gt 1 ]]; then
+        active_desktop=$(xdotool get_desktop 2>/dev/null)
+        xdotool set_desktop_for_window $wid $active_desktop
+    fi
 
     xdotool windowmove "$wid" "$X" "$Y" windowactivate --sync "$wid"
 }
