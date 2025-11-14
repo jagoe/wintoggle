@@ -9,7 +9,7 @@ display_logo() {
     ${NC}"
 }
 
-VERSION="0.1.2"
+VERSION="0.2.0"
 
 cmd=""
 window_name=""
@@ -134,10 +134,10 @@ focus_window() {
 
     if $center_at_cursor; then
         eval $(xdotool getwindowgeometry --shell --prefix WINDOW_ $wid)
-        X=$(( $X - $WINDOW_WIDTH / 2 ))
-        Y=$(( $Y - $WINDOW_HEIGHT / 2 ))
+        X=$(($X - $WINDOW_WIDTH / 2))
+        Y=$(($Y - $WINDOW_HEIGHT / 2))
     fi
-    
+
     if [[ $(xdotool get_num_desktops 2>/dev/null) -gt 1 ]]; then
         active_desktop=$(xdotool get_desktop 2>/dev/null)
         xdotool set_desktop_for_window $wid $active_desktop

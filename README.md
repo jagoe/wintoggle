@@ -14,9 +14,9 @@ Download script to machine where $PATH is available:
 ```bash
 cd /tmp
 
-desired_version=0.1.0
+desired_version=main
 
-wget https://raw.githubusercontent.com/surgiie/wintoggle/refs/tags/v$desired_version/wintoggle
+wget https://raw.githubusercontent.com/surgiie/wintoggle/$desired_version/wintoggle
 
 chmod u+x ./wintoggle
 # example, update path as needed
@@ -38,9 +38,17 @@ wintoggle --name "firefox-bin" --cmd "firefox"
 
 **Note** The application window will be focused to the monitor where the mouse is.
 
+### Centering Window at Cursor
+
+You can use the `--center-at-cursor` flag to display the window centered on the cursor position:
+
+```bash
+wintoggle --name "firefox" --center-at-cursor
+```
+
 ### Hooks
 
-If you'd like to execute some scripts or commands during you activate and minimize events, you can use the `--on-activate` and `--on-minimize` flags. For example, if you wanted
+If you'd like to execute some scripts or commands during activate and minimize events, you can use the `--on-activate` and `--on-minimize` flags. For example, if you wanted
 to play some sounds during these events, here's how you could go about it:
 
 ```bash
