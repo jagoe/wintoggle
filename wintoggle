@@ -131,7 +131,7 @@ run_hook() {
 focus_window() {
     local wid="$1"
     eval $(xdotool getmouselocation --shell)
-    
+
     if $center_at_cursor; then
         eval $(xdotool getwindowgeometry --shell --prefix WINDOW_ $wid)
         X=$(( $X - $WINDOW_WIDTH / 2 ))
