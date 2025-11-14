@@ -12,15 +12,9 @@ A bash cli that toggles a window in or out of the current active monitor.
 Download script to machine where $PATH is available:
 
 ```bash
-cd /tmp
-
 desired_version=main
-
-wget https://raw.githubusercontent.com/surgiie/wintoggle/$desired_version/wintoggle
-
-chmod u+x ./wintoggle
-# example, update path as needed
-mv ./wintoggle $HOME/.local/bin/wintoggle
+install_dir="$HOME/.local/bin"
+wget -P /tmp https://raw.githubusercontent.com/surgiie/wintoggle/$desired_version/wintoggle && chmod u+x /tmp/wintoggle && mv /tmp/wintoggle $install_di/wintoggle
 ```
 
 ## Usage:
