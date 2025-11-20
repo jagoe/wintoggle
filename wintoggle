@@ -85,17 +85,42 @@ if [[ -z "$window_name" ]]; then
     exit 1
 fi
 
+get_window_state() {
+    local wid="$1"
+
+    local state="$(xprop -id "$wid" _NET_WM_STATE 2>/dev/null)"
+    if [[ $state =~ "not found" ]]; then
+        state="$(xprop -id "$wid" WM_STATE 2>/dev/null)"
+        if [[ $state =~ "not found" ]]; then
+            return 1
+        fi
+    fi
+
+    echo "$state"
+    return 0
+}
+
 get_window_id() {
     local pattern="$1"
     local pid
-    pids=$(pgrep "$pattern" 2>/dev/null) # Gets ALL matching processes
-    for pid in $pids; do                 # Check each one for a window
-        wid=$(xdotool search --pid $pid 2>/dev/null | sort | head -n1)
-        if [[ -n "$wid" ]]; then
-            echo "$wid"
-            return 0
-        fi
+    local pids=$(pgrep "$pattern" 2>/dev/null) # Gets ALL matching processes
+    local wid
+    for pid in $pids; do                       # Check each one for a window
+        local wids=$(xdotool search --pid "$pid" 2>/dev/null | sort)
+        for wid in $wids; do                   # Check each for being a displayable window
+            if [[ -z "$wid" ]]; then
+                continue
+            fi
+
+            local state=$(get_window_state "$wid")
+            if [[ -n "$state" ]]; then
+                echo "$wid"
+                return 0
+            fi
+        done
     done
+
+    return 1
 }
 
 wait_for_window() {
@@ -197,7 +222,7 @@ echo "Window Process Name: $window_name"
 echo "Window ID: $window_id"
 
 state=""
-if ! state="$(xprop -id "$window_id" _NET_WM_STATE 2>/dev/null)"; then
+if ! state="$(get_window_state "$window_id")"; then
     echo "❌ Could not get window state for ID: $window_id"
     exit 1
 fi
