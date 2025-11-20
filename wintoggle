@@ -157,6 +157,16 @@ run_hook() {
     }
 }
 
+is_window_unmapped() {
+    local wid="$1"
+
+    if [[ "${state,,}" =~ "withdrawn" ]]; then
+        return 0
+    fi
+
+    return 1
+}
+
 # Improved focus function with better X11 handling
 focus_window() {
     local wid="$1"
@@ -168,14 +178,18 @@ focus_window() {
         Y=$(($Y - $WINDOW_HEIGHT / 2))
     fi
 
-    if $unmap; then
+    if $unmap && is_window_unmapped $wid; then
         # No --sync for a smoother experience
         xdotool windowmap "$wid"
     fi
 
     if [[ $(xdotool get_num_desktops 2>/dev/null) -gt 1 ]]; then
         active_desktop=$(xdotool get_desktop 2>/dev/null)
-        xdotool set_desktop_for_window $wid $active_desktop
+        window_desktop=$(xdotool get_desktop_for_window "$wid" 2>/dev/null)
+
+        if [[ "$active_desktop" != "$window_desktop" ]]; then
+            xdotool set_desktop_for_window $wid $active_desktop
+        fi
     fi
 
     xdotool windowmove "$wid" "$X" "$Y" windowactivate --sync "$wid"
